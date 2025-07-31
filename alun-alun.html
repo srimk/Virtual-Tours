@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>360°</title>
+    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  </head>
+  <body>
+    <a-scene>
+      <!-- Kamera rig yang bisa auto-rotate -->
+      <a-entity id="cameraRig" position="0 1.6 0" auto-rotate-camera>
+        <a-entity
+          id="camera"
+          camera="fov: 80"
+          look-controls="reverseMouseDrag: false; touchEnabled: true"
+          wasd-controls="enabled: false"
+          zoom-controls>
+        </a-entity>
+      </a-entity>
+
+      <!-- Sky panorama -->
+      <a-sky src="Alun Alun.png"></a-sky>
+    </a-scene>
+
+    <!-- Komponen auto-rotate -->
+    <script>
+      AFRAME.registerComponent('auto-rotate-camera', {
+        schema: { speed: { type: 'number', default: 0.05 } },
+        init: function () {
+          this.enabled = true;
+          const sceneEl = this.el.sceneEl;
+          const pause = () => this.enabled = false;
+          const resume = () => this.enabled = true;
+
+          sceneEl.addEventListener('mousedown', pause);
+          sceneEl.addEventListener('touchstart', pause);
+          sceneEl.addEventListener('mouseup', resume);
+          sceneEl.addEventListener('touchend', resume);
+        },
+        tick: function () {
+          if (!this.enabled) return;
+          const rot = this.el.getAttribute('rotation');
+          rot.y += this.data.speed;
+          this.el.setAttribute('rotation', rot);
+        }
+      });
+    </script>
+
+    <!-- Komponen zoom-controls -->
+    <script>
+      AFRAME.registerComponent('zoom-controls', {
+        init: function () {
+          const cameraEl = this.el;
+          const camera = cameraEl.getObject3D('camera');
+          const minFov = 30;
+          const maxFov = 100;
+
+          window.addEventListener('wheel', (e) => {
+            if (!camera) return;
+            e.preventDefault();
+            let newFov = camera.fov + (e.deltaY * 0.05);
+            newFov = Math.max(minFov, Math.min(maxFov, newFov));
+            camera.fov = newFov;
+            camera.updateProjectionMatrix();
+          }, { passive: false });
+        }
+      });
+    </script>
+  </body>
+</html>
